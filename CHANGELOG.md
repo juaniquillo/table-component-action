@@ -9,3 +9,4 @@ All notable changes to `juaniquillo/table-component-action` are documented here.
 - Added `TableRow::make()` to create row components.
 - Added `TableBuilder` and `TableTypes` for assembling complete tables.
 - Added a Laravel Boost skill.
+- Raised PHPStan analysis to level 10.

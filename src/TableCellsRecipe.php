@@ -19,7 +19,7 @@ class TableCellsRecipe implements RecipeInterface
     use IsRecipe;
 
     /**
-     * @param  string|Closure(Stringable|BackedEnum|string|array<mixed>|null $value, Model $model):(string|int|float|bool|Stringable|BackendComponent|CompoundComponent)|null  $value
+     * @param  string|Closure(mixed $value, Model $model):(string|int|float|bool|Stringable|BackendComponent|CompoundComponent)|null  $value
      * @param  array<string, string|array<int|string, string>>|Closure(Model $model): array<string, string|array<int|string, string>>  $themes
      * @param  array<string, int|string|null>|Closure(Model $model): array<string, int|string|null>  $attributes
      * @param  class-string<BackendComponent|CompoundComponent>|null  $component

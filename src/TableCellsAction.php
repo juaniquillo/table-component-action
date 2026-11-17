@@ -186,7 +186,7 @@ class TableCellsAction extends Action implements ActionInterface
             $value = $this->resolveValue($name, $recipe);
             $component = $this->resolveCellComponent($value, $recipe);
 
-            $this->output->set($name, $component);
+            $this->getOutput()->set($name, $component);
         }
 
         return $this;

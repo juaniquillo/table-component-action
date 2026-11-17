@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Juaniquillo\BackendComponents\Enums\ComponentEnum;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\IncompleteBackendComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableCells;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\TableComponentType;
 use Juaniquillo\TableComponentAction\Utils\TableComponentUtil;
 
 it('builds a header cell with attributes and themes', function () {
@@ -95,4 +96,15 @@ it('throws when the configured component cannot hold content', function () {
 
     expect(fn () => $util->table([]))
         ->toThrow(Exception::class, 'The component must implement');
+});
+
+it('uses the configured row type for the head row', function () {
+    $util = new TableComponentUtil;
+
+    $head = $util->head(
+        headers: [$util->header('Name')],
+        rowType: TableComponentType::Row,
+    );
+
+    expect($head->toArray()['contents'][0]['name'])->toBe('table.tr');
 });
