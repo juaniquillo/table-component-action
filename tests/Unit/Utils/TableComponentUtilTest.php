@@ -3,13 +3,9 @@
 declare(strict_types=1);
 
 use Juaniquillo\BackendComponents\Enums\ComponentEnum;
-use Juaniquillo\BackendComponents\MainBackendComponent;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\IncompleteBackendComponent;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\TableCells;
 use Juaniquillo\TableComponentAction\Utils\TableComponentUtil;
-
-function tableCell(string $content): MainBackendComponent
-{
-    return (new MainBackendComponent(ComponentEnum::TD))->setContent($content);
-}
 
 it('builds a header cell with attributes and themes', function () {
     $util = new TableComponentUtil;
@@ -31,8 +27,8 @@ it('builds a header cell with attributes and themes', function () {
 it('keeps the given cell components inside a row', function () {
     $util = new TableComponentUtil;
 
-    $first = tableCell('Alice');
-    $second = tableCell('alice@example.com');
+    $first = TableCells::td('Alice');
+    $second = TableCells::td('alice@example.com');
 
     $contents = $util->row([$first, $second])->toArray()['contents'];
 
@@ -50,7 +46,7 @@ it('assembles the head, body and table parts', function () {
     ]);
 
     $body = $util->body([
-        $util->row([tableCell('Alice'), tableCell('alice@example.com')]),
+        $util->row([TableCells::td('Alice'), TableCells::td('alice@example.com')]),
     ]);
 
     $table = $util->table([$head, $body]);
@@ -64,7 +60,7 @@ it('assembles the head, body and table parts', function () {
         ->and($array['contents'][0]['contents'][0]['contents'])->toHaveCount(2)
         ->and($array['contents'][1]['name'])->toBe(ComponentEnum::TBODY->value)
         ->and($array['contents'][1]['contents'][0]['name'])->toBe(ComponentEnum::TR->value)
-        ->and($array['contents'][1]['contents'][0]['contents'][0])->toBe(tableCell('Alice')->toArray());
+        ->and($array['contents'][1]['contents'][0]['contents'][0])->toBe(TableCells::td('Alice')->toArray());
 });
 
 it('applies themes and attributes to every table part', function () {
@@ -77,7 +73,7 @@ it('applies themes and attributes to every table part', function () {
                 themes: ['table' => ['th', 'th-dark']],
             ),
             $util->body(
-                rows: [$util->row([tableCell('Alice')], attributes: ['wire:key' => 'row-1'])],
+                rows: [$util->row([TableCells::td('Alice')], attributes: ['wire:key' => 'row-1'])],
                 themes: ['table' => 'tbody'],
             ),
         ],
@@ -92,4 +88,11 @@ it('applies themes and attributes to every table part', function () {
         ->and($array['contents'][0]['theme']['themes'])->toBe(['table' => ['th', 'th-dark']])
         ->and($array['contents'][1]['theme']['themes'])->toBe(['table' => 'tbody'])
         ->and($array['contents'][1]['contents'][0]['attributes'])->toBe(['wire:key' => 'row-1']);
+});
+
+it('throws when the configured component cannot hold content', function () {
+    $util = new TableComponentUtil(component: IncompleteBackendComponent::class);
+
+    expect(fn () => $util->table([]))
+        ->toThrow(Exception::class, 'The component must implement');
 });

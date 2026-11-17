@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Juaniquillo\TableComponentAction\TableRowsAction;
+use Juaniquillo\TableComponentAction\TableCellsAction;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\FakeModel;
 
 it('renders a table cell', function () {
-    $action = new TableRowsAction(new FakeModel);
+    $action = new TableCellsAction(new FakeModel);
 
     $html = $action->resolveCellComponent('Alice')->toHtml();
 
@@ -15,7 +15,7 @@ it('renders a table cell', function () {
 });
 
 it('renders the configured theme classes', function () {
-    $action = new TableRowsAction(
+    $action = new TableCellsAction(
         model: new FakeModel,
         themes: ['table' => 'td'],
     );

@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 use Juaniquillo\CrudAssistant\Inputs\DefaultInput;
-use Juaniquillo\TableComponentAction\TableRowsAction;
-use Juaniquillo\TableComponentAction\TableRowsRecipe;
+use Juaniquillo\TableComponentAction\TableCellsAction;
+use Juaniquillo\TableComponentAction\TableCellsRecipe;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\FakeModel;
 use Juaniquillo\TableComponentAction\Utils\TableComponentUtil;
 
-it('renders cells produced by the table rows action inside a table', function () {
-    $action = new TableRowsAction(new FakeModel(['name' => 'Alice']));
+it('renders cells produced by the table cells action inside a table', function () {
+    $action = new TableCellsAction(new FakeModel(['name' => 'Alice']));
     $action->execute(
-        (new DefaultInput('name'))->setRecipe(new TableRowsRecipe(label: 'Name')),
+        (new DefaultInput('name'))->setRecipe(new TableCellsRecipe(label: 'Name')),
     );
 
     $cells = array_values($action->getOutput()->toArray());

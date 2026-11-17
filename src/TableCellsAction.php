@@ -20,14 +20,15 @@ use Juaniquillo\CrudAssistant\Contracts\InputCollectionInterface;
 use Juaniquillo\CrudAssistant\Contracts\InputInterface;
 use Juaniquillo\CrudAssistant\Contracts\RecipeInterface;
 use Juaniquillo\CrudAssistant\DataContainer;
+use Stringable;
 
-class TableRowsAction extends Action implements ActionInterface
+class TableCellsAction extends Action implements ActionInterface
 {
     /**
      * @param  array<string, string|array<int|string, string>>|Closure(Model $model): array<string, string|array<int|string, string>>  $themes
      * @param  array<string, int|string|null>|Closure(Model $model): array<string, int|string|null>  $attributes
      * @param  class-string<BackendComponent|CompoundComponent>  $component
-     * @param  array<string, TableRowsRecipe|RecipeInterface>  $extraCells
+     * @param  array<string, TableCellsRecipe|RecipeInterface>  $extraCells
      */
     public function __construct(
         private Model $model,
@@ -53,7 +54,7 @@ class TableRowsAction extends Action implements ActionInterface
         return $this;
     }
 
-    public function setExtraCell(string $identifier, TableRowsRecipe|RecipeInterface $recipe): static
+    public function setExtraCell(string $identifier, TableCellsRecipe|RecipeInterface $recipe): static
     {
         $this->extraCells[$identifier] = $recipe;
 
@@ -61,7 +62,7 @@ class TableRowsAction extends Action implements ActionInterface
     }
 
     /**
-     * @param  array<string, TableRowsRecipe|RecipeInterface>  $extraCells
+     * @param  array<string, TableCellsRecipe|RecipeInterface>  $extraCells
      */
     public function setExtraCells(array $extraCells): static
     {
@@ -72,11 +73,21 @@ class TableRowsAction extends Action implements ActionInterface
         return $this;
     }
 
+    /**
+     * Ordered labels of the cells produced so far.
+     *
+     * @return array<int, string|int>
+     */
+    public function getHeaders(): array
+    {
+        return array_keys($this->getOutput()->toArray());
+    }
+
     public function execute(InputCollectionInterface|InputInterface $input): void
     {
         $recipe = $input->getRecipe($this->getIdentifier());
 
-        if (! $recipe instanceof TableRowsRecipe) {
+        if (! $recipe instanceof TableCellsRecipe) {
             throw new Exception('The '.static::getIdentifier().' recipe is required.');
         }
 
@@ -99,33 +110,29 @@ class TableRowsAction extends Action implements ActionInterface
         );
     }
 
-    public function resolveValue(mixed $value = null, TableRowsRecipe|RecipeInterface|null $recipe = new TableRowsRecipe): string|int|BackendComponent|CompoundComponent|null
+    public function resolveValue(mixed $value = null, TableCellsRecipe|RecipeInterface|null $recipe = new TableCellsRecipe): string|int|BackendComponent|CompoundComponent|null
     {
-        if (! $recipe instanceof TableRowsRecipe) {
-            $recipe = new TableRowsRecipe;
+        if (! $recipe instanceof TableCellsRecipe) {
+            $recipe = new TableCellsRecipe;
         }
 
         $recipeValue = $recipe->value;
 
         if ($recipeValue instanceof Closure) {
-            return $recipeValue($value, $this->model);
+            return $this->normalizeValue($recipeValue($value, $this->model));
         }
 
-        if ($recipeValue) {
-            return $recipeValue;
+        if ($recipeValue !== null) {
+            return $this->normalizeValue($recipeValue);
         }
 
-        if ($value instanceof BackedEnum) {
-            return $value->value;
-        }
-
-        return $value;
+        return $this->normalizeValue($value);
     }
 
-    public function resolveCellComponent(string|int|BackendComponent|CompoundComponent|null $value = null, TableRowsRecipe|RecipeInterface|null $recipe = new TableRowsRecipe): BackendComponent|CompoundComponent
+    public function resolveCellComponent(string|int|BackendComponent|CompoundComponent|null $value = null, TableCellsRecipe|RecipeInterface|null $recipe = new TableCellsRecipe): BackendComponent|CompoundComponent
     {
-        if (! $recipe instanceof TableRowsRecipe) {
-            $recipe = new TableRowsRecipe;
+        if (! $recipe instanceof TableCellsRecipe) {
+            $recipe = new TableCellsRecipe;
         }
 
         $value ??= '';
@@ -183,5 +190,30 @@ class TableRowsAction extends Action implements ActionInterface
         }
 
         return $this;
+    }
+
+    private function normalizeValue(mixed $value): string|int|BackendComponent|CompoundComponent|null
+    {
+        if ($value === null || is_string($value) || is_int($value) || $value instanceof BackendComponent) {
+            return $value;
+        }
+
+        if ($value instanceof BackedEnum) {
+            return $value->value;
+        }
+
+        if ($value instanceof Stringable) {
+            return (string) $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        if (is_float($value)) {
+            return (string) $value;
+        }
+
+        throw new Exception('Unsupported table cell value of type '.get_debug_type($value).'.');
     }
 }

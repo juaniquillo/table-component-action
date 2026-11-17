@@ -9,16 +9,30 @@ use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
 use Juaniquillo\CrudAssistant\Contracts\DataContainerInterface;
 
 /**
- * A single table row with its cells and row-level attributes.
+ * Creates the row component that wraps the cells produced by TableCellsAction.
  */
-final readonly class TableRow
+final class TableRow
 {
     /**
-     * @param  DataContainerInterface<mixed>|array<string|int, BackendComponent|CompoundComponent>  $cells
+     * @param  DataContainerInterface<mixed>|array<string|int, string|int|BackendComponent|CompoundComponent>  $output
      * @param  array<string, int|string|null>  $attributes
+     * @param  array<string, string|array<int|string, string>>  $themes
      */
-    public function __construct(
-        public DataContainerInterface|array $cells,
-        public array $attributes = [],
-    ) {}
+    public static function make(
+        DataContainerInterface|array $output,
+        array $attributes = [],
+        array $themes = [],
+        ?TableComponentUtil $util = null,
+        ?TableTypes $types = null,
+    ): CompoundComponent {
+        $util ??= new TableComponentUtil;
+        $types ??= new TableTypes;
+
+        return $util->row(
+            cells: $output instanceof DataContainerInterface ? $output->toArray() : $output,
+            type: $types->row,
+            themes: $themes,
+            attributes: $attributes,
+        );
+    }
 }
