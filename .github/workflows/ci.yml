@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSER_MEMORY_LIMIT: -1
+  COMPOSER_NO_INTERACTION: 1
+
+jobs:
+  qa:
+    name: QA (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      # Pest 5 requires PHP 8.4, so the matrix starts at 8.4 even though
+      # the package itself supports PHP 8.3.
+      matrix:
+        php: [ "8.4", "8.5" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, fileinfo, sqlite, pdo_sqlite, bcmath, intl
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php-${{ matrix.php }}-
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress --ansi
+
+      - name: PHPStan / Larastan
+        run: composer analyse
+
+      - name: Rector
+        run: composer rector:check
+
+      - name: Pint
+        run: composer lint:check
+
+      - name: Pest
+        run: composer test

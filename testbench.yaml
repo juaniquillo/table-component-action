@@ -1,0 +1,18 @@
+providers:
+  - Juaniquillo\TableComponentAction\TableComponentActionServiceProvider
+  - Juaniquillo\BackendComponents\BackendComponentsServiceProvider
+
+env:
+  APP_NAME: "Table Component Action"
+
+workbench:
+  start: '/'
+  install: false
+  discovers:
+    config: false
+    factories: false
+    web: false
+    api: false
+    commands: false
+    components: false
+    views: false
