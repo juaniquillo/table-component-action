@@ -4,27 +4,25 @@ declare(strict_types=1);
 
 namespace Juaniquillo\TableComponentAction\Utils;
 
-use Closure;
 use Exception;
 use Juaniquillo\BaseBackendComponent\Contracts\BackendComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
-use Juaniquillo\CrudAssistant\Contracts\DataContainerInterface;
 
 /**
- * Assembles a complete table from the cells produced by TableRowsAction.
+ * Assembles a complete table from prebuilt row components.
  *
- * The builder only orchestrates headers, ordering and row attributes. All
- * component creation is delegated to TableComponentUtil.
+ * Rows keep the order given by the caller and cells keep the order produced
+ * by TableCellsAction. Headers describe the <thead> only.
  */
 final class TableBuilder
 {
     /**
-     * @var array<int, TableRow|DataContainerInterface<mixed>|array<string|int, mixed>>
+     * @var array<int|string, CompoundComponent>
      */
     private readonly array $rows;
 
     /**
-     * @var array<int, string|int>|null
+     * @var array<int, string|int|BackendComponent|CompoundComponent>|null
      */
     private readonly ?array $headers;
 
@@ -58,20 +56,8 @@ final class TableBuilder
     private array $bodyThemes = [];
 
     /**
-     * @var array<string, string|array<int|string, string>>
-     */
-    private array $rowThemes = [];
-
-    /**
-     * @var (Closure(TableRow|DataContainerInterface<mixed>|array<string|int, mixed>, int): array<string, int|string|null>)|null
-     */
-    private ?Closure $rowAttributes = null;
-
-    private bool $strict = false;
-
-    /**
-     * @param  iterable<TableRow|DataContainerInterface<mixed>|array<string|int, mixed>>  $rows
-     * @param  array<int, string|int>|null  $headers
+     * @param  iterable<int|string, CompoundComponent>  $rows
+     * @param  array<int, string|int|BackendComponent|CompoundComponent>|null  $headers
      */
     public function __construct(
         iterable $rows,
@@ -79,15 +65,15 @@ final class TableBuilder
         ?TableComponentUtil $util = null,
         ?TableTypes $types = null,
     ) {
-        $this->rows = is_array($rows) ? array_values($rows) : iterator_to_array($rows, false);
+        $this->rows = is_array($rows) ? $rows : iterator_to_array($rows);
         $this->headers = $headers === null ? null : array_values($headers);
         $this->util = $util ?? new TableComponentUtil;
         $this->types = $types ?? new TableTypes;
     }
 
     /**
-     * @param  iterable<TableRow|DataContainerInterface<mixed>|array<string|int, mixed>>  $rows
-     * @param  array<int, string|int>|null  $headers
+     * @param  iterable<int|string, CompoundComponent>  $rows
+     * @param  array<int, string|int|BackendComponent|CompoundComponent>|null  $headers
      */
     public static function make(
         iterable $rows,
@@ -149,36 +135,6 @@ final class TableBuilder
     }
 
     /**
-     * @param  array<string, string|array<int|string, string>>  $themes
-     */
-    public function rowThemes(array $themes): static
-    {
-        $this->rowThemes = $themes;
-
-        return $this;
-    }
-
-    /**
-     * Resolver returning extra attributes for each row. Resolver values win
-     * over the attributes set on TableRow.
-     *
-     * @param  Closure(TableRow|DataContainerInterface<mixed>|array<string|int, mixed>, int): array<string, int|string|null>  $resolver
-     */
-    public function rowAttributes(Closure $resolver): static
-    {
-        $this->rowAttributes = $resolver;
-
-        return $this;
-    }
-
-    public function strict(bool $strict = true): static
-    {
-        $this->strict = $strict;
-
-        return $this;
-    }
-
-    /**
      * @return array{head: CompoundComponent, body: CompoundComponent, table: CompoundComponent}|null
      */
     public function components(): ?array
@@ -189,6 +145,8 @@ final class TableBuilder
 
         $headers = $this->resolveHeaders();
 
+        $this->assertCellCounts($headers);
+
         $head = $this->util->head(
             headers: $this->buildHeaders($headers),
             type: $this->types->head,
@@ -197,7 +155,7 @@ final class TableBuilder
         );
 
         $body = $this->util->body(
-            rows: $this->buildRows($headers),
+            rows: $this->rows,
             type: $this->types->body,
             themes: $this->bodyThemes,
         );
@@ -232,120 +190,56 @@ final class TableBuilder
     }
 
     /**
-     * @return array<int, string|int>
+     * @return array<int, string|int|BackendComponent|CompoundComponent>
      */
     private function resolveHeaders(): array
     {
-        if ($this->headers !== null) {
-            return $this->headers;
+        if ($this->headers === null || $this->headers === []) {
+            throw new Exception('Headers are required when building a table from prebuilt rows.');
         }
 
-        return array_keys($this->normalizeCells($this->rows[0]));
+        return $this->headers;
     }
 
     /**
-     * @param  array<int, string|int>  $headers
-     * @return array<int, CompoundComponent>
+     * @param  array<int, string|int|BackendComponent|CompoundComponent>  $headers
+     */
+    private function assertCellCounts(array $headers): void
+    {
+        $expected = count($headers);
+
+        foreach ($this->rows as $key => $row) {
+            $actual = count($row->getContents());
+
+            if ($actual !== $expected) {
+                throw new Exception(sprintf(
+                    'Row "%s" has %d cells but %d headers were provided.',
+                    (string) $key,
+                    $actual,
+                    $expected,
+                ));
+            }
+        }
+    }
+
+    /**
+     * @param  array<int, string|int|BackendComponent|CompoundComponent>  $headers
+     * @return array<int, BackendComponent>
      */
     private function buildHeaders(array $headers): array
     {
-        $cells = [];
+        $components = [];
 
         foreach ($headers as $header) {
-            $cells[] = $this->util->header(
-                header: $header,
-                type: $this->types->header,
-                themes: $this->headerThemes,
-            );
+            $components[] = $header instanceof BackendComponent
+                ? $header
+                : $this->util->header(
+                    header: $header,
+                    type: $this->types->header,
+                    themes: $this->headerThemes,
+                );
         }
 
-        return $cells;
-    }
-
-    /**
-     * @param  array<int, string|int>  $headers
-     * @return array<int, CompoundComponent>
-     */
-    private function buildRows(array $headers): array
-    {
-        $rows = [];
-
-        foreach ($this->rows as $index => $row) {
-            $attributes = $row instanceof TableRow ? $row->attributes : [];
-
-            if ($this->rowAttributes instanceof Closure) {
-                $attributes = array_merge($attributes, ($this->rowAttributes)($row, $index));
-            }
-
-            $rows[] = $this->util->row(
-                cells: $this->orderCells($this->normalizeCells($row), $headers),
-                type: $this->types->row,
-                themes: $this->rowThemes,
-                attributes: $attributes,
-            );
-        }
-
-        return $rows;
-    }
-
-    /**
-     * @param  array<string|int, mixed>  $cells
-     * @param  array<int, string|int>  $headers
-     * @return array<int, BackendComponent>
-     */
-    private function orderCells(array $cells, array $headers): array
-    {
-        $ordered = [];
-
-        foreach ($headers as $header) {
-            if (! array_key_exists($header, $cells)) {
-                if ($this->strict) {
-                    throw new Exception('Missing cell for header "'.$header.'".');
-                }
-
-                $ordered[] = $this->emptyCell();
-
-                continue;
-            }
-
-            $ordered[] = $this->resolveCell($cells[$header]);
-        }
-
-        return $ordered;
-    }
-
-    private function resolveCell(mixed $cell): BackendComponent
-    {
-        if ($cell instanceof BackendComponent) {
-            return $cell;
-        }
-
-        if (is_string($cell) || is_int($cell)) {
-            return $this->util->resolveComponent([$cell], $this->types->cell);
-        }
-
-        return $this->emptyCell();
-    }
-
-    private function emptyCell(): CompoundComponent
-    {
-        return $this->util->resolveComponent([], $this->types->cell);
-    }
-
-    /**
-     * @param  TableRow|DataContainerInterface<mixed>|array<string|int, mixed>  $row
-     * @return array<string|int, mixed>
-     */
-    private function normalizeCells(TableRow|DataContainerInterface|array $row): array
-    {
-        if ($row instanceof TableRow) {
-            $row = $row->cells;
-        }
-
-        if ($row instanceof DataContainerInterface) {
-            return $row->toArray();
-        }
-
-        return $row;
+        return $components;
     }
 }

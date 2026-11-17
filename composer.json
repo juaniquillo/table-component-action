@@ -1,8 +1,26 @@
 {
   "name": "juaniquillo/table-component-action",
-  "description": "Table row action/recipe components for backend tables.",
+  "description": "Table cell action/recipe components and table builders for backend tables.",
+  "keywords": [
+    "laravel",
+    "table",
+    "backend-components",
+    "crud"
+  ],
+  "homepage": "https://github.com/juaniquillo/table-component-action",
   "type": "library",
   "license": "MIT",
+  "authors": [
+    {
+      "name": "Juaniquillo",
+      "email": "juaniquillo@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/juaniquillo/table-component-action/issues",
+    "source": "https://github.com/juaniquillo/table-component-action"
+  },
   "require": {
     "php": "^8.3",
     "illuminate/database": "^11.0||^12.0||^13.0",

@@ -14,9 +14,9 @@ use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\ThemeManager;
 
 /**
- * Builds the table parts that wrap the cells produced by TableRowsAction.
+ * Builds the table parts that wrap the cells produced by TableCellsAction.
  *
- * The cells returned by TableRowsAction are already <td> components, so this
+ * The cells returned by TableCellsAction are already <td> components, so this
  * utility places them directly inside a <tr> instead of wrapping them again.
  */
 final readonly class TableComponentUtil
