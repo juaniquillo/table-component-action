@@ -4,6 +4,13 @@
 
 Simple package providing table cell action/recipe components and table builders.
 
+> [!TIP]
+> #### Laravel Boost Skill
+> If you use [Laravel Boost](https://github.com/aleksipopovicdev/laravel-boost), install the AI skill:
+> ```bash
+> php artisan boost:add-skill https://github.com/juaniquillo/table-component-action
+> ```
+
 ## Requirements
 
 - PHP ^8.3
@@ -18,7 +25,9 @@ composer require juaniquillo/table-component-action
 ## Usage
 
 `TableCellsAction` produces the `<td>` cells. `TableRow::make()` wraps them in
-a `<tr>`, and `TableBuilder` assembles the table:
+a `<tr>`, and `TableBuilder` assembles the table.
+
+### Basic table
 
 ```php
 use Juaniquillo\TableComponentAction\TableCellsAction;
@@ -53,6 +62,40 @@ Cell order comes from the CRUD inputs, and row order comes from the collection.
 Headers are required for prebuilt rows and only describe the `<thead>`. A row
 whose cell count does not match the headers throws an exception. An empty row
 set returns `null`.
+
+### Actions column
+
+Extra cells are added during `cleanup()`, so run the action through a CRUD
+collection. `getHeaders()` includes them after cleanup.
+
+```php
+use Juaniquillo\BackendComponents\Enums\ComponentEnum;
+use Juaniquillo\BackendComponents\Factories\ComponentFactory;
+use Juaniquillo\TableComponentAction\TableCellsRecipe;
+
+// Inside the loop, before $crud->execute($action):
+$action->setExtraCell('Actions', new TableCellsRecipe(
+    value: fn ($value, $model) => ComponentFactory::make(ComponentEnum::BUTTON)
+        ->setContent('Edit')
+        ->setTheme('action', 'link')
+        ->setAttribute('wire:click', 'edit('.$model->getKey().')'),
+));
+```
+
+### Custom cells
+
+Use the recipe `value` closure for custom rendering and `callback` to touch the
+finished component:
+
+```php
+new TableCellsRecipe(
+    label: 'Status',
+    value: fn ($value, $model) => $model->status->label(),
+    callback: fn ($value, $component) => $component->setAttribute('data-status', $value),
+    attributes: ['class' => 'text-center'],
+    themes: ['table' => ['td', 'td-dark']],
+);
+```
 
 Scalar, enum, and `Stringable` values are normalized to strings. Arrays and
 unsupported objects throw an exception.
@@ -122,11 +165,14 @@ $table = $util->table([
 {{ $table }}
 ```
 
-## Laravel Boost
+## Where to look
 
-This package ships a Boost skill at
-`resources/boost/skills/table-component-action/SKILL.md`. Run
-`php artisan boost:install` and select skills to install it in your application.
+- **Usage recipes:** this README.
+- **Executable examples:** `tests/Unit/TableCellsActionTest.php`,
+  `tests/Unit/Utils/TableRowTest.php`, `tests/Unit/Utils/TableBuilderTest.php`,
+  and `tests/Feature/BladeTableIntegrationTest.php`.
+- **Agent guidance:** `resources/boost/skills/table-component-action/SKILL.md`.
+- **Release history:** [CHANGELOG.md](CHANGELOG.md).
 
 ## Testing
 
