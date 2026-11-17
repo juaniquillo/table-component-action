@@ -10,7 +10,7 @@ assemble the surrounding table components.
 | `composer qa` | Analyse + Rector check + Pint check + tests (run before every PR) |
 | `composer test` | Run Pest |
 | `composer test:coverage` | Pest with coverage (needs Xdebug or PCOV) |
-| `composer analyse` | PHPStan/Larastan, level 7 |
+| `composer analyse` | PHPStan/Larastan, level 10 |
 | `composer rector` | Apply Rector refactors |
 | `composer rector:check` | Rector dry-run |
 | `composer lint` | Format `src` with Pint |
@@ -76,7 +76,7 @@ Namespaces follow PSR-4 from `composer.json`:
   construction. Do not make mutable fluent builders readonly.
 - Fluent setters return `static`.
 - Type every array shape and generic (`array<string, int|string|null>`,
-  `DataContainerInterface<mixed>`, and so on). PHPStan level 7 must pass.
+  `DataContainerInterface<mixed>`, and so on). PHPStan level 10 must pass.
 - Never silence PHPStan with `@phpstan-ignore`, baselines, `assert()`, or
   inline `@var` overrides. Fix the underlying type or add a runtime guard.
 - Throw `Exception` with a clear message for invalid state, for example a

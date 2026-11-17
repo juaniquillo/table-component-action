@@ -32,7 +32,9 @@ it('builds a table from prebuilt rows and label headers', function () {
         ->and($head['contents'][0]['contents'][1]['contents'])->toBe(['Email'])
         ->and($body['contents'])->toHaveCount(2)
         ->and($body['contents'][0]['contents'][0]['contents'])->toBe(['Alice'])
-        ->and($body['contents'][1]['contents'][0]['contents'])->toBe(['Bob']);
+        ->and($body['contents'][0]['contents'][1]['contents'])->toBe(['alice@example.com'])
+        ->and($body['contents'][1]['contents'][0]['contents'])->toBe(['Bob'])
+        ->and($body['contents'][1]['contents'][1]['contents'])->toBe(['bob@example.com']);
 });
 
 it('accepts prebuilt header components', function () {
@@ -125,4 +127,44 @@ it('uses the configured table types', function () {
         ->and($components['body']->toArray()['name'])->toBe('table.tbody')
         ->and($components['body']->toArray()['contents'][0]['name'])->toBe('table.tr')
         ->and($components['head']->toArray()['contents'][0]['contents'][0]['name'])->toBe('table.th');
+});
+
+it('does not reorder cells when headers are in another order', function () {
+    $rows = [
+        TableRow::make(DataContainer::make([
+            'Name' => TableCells::td('Alice'),
+            'Email' => TableCells::td('alice@example.com'),
+        ])),
+    ];
+
+    $components = TableBuilder::make(
+        rows: $rows,
+        headers: ['Email', 'Name'],
+    )->components();
+
+    $head = $components['head']->toArray();
+    $body = $components['body']->toArray();
+
+    expect($head['contents'][0]['contents'][0]['contents'])->toBe(['Email'])
+        ->and($head['contents'][0]['contents'][1]['contents'])->toBe(['Name'])
+        ->and($body['contents'][0]['contents'][0]['contents'])->toBe(['Alice'])
+        ->and($body['contents'][0]['contents'][1]['contents'])->toBe(['alice@example.com']);
+});
+
+it('throws for empty headers', function () {
+    $rows = [
+        TableRow::make(DataContainer::make(['Name' => TableCells::td('Alice')])),
+    ];
+
+    expect(fn () => TableBuilder::make(rows: $rows, headers: [])->components())
+        ->toThrow(Exception::class, 'Headers are required when building a table from prebuilt rows.');
+});
+
+it('reports the row key on a cell count mismatch', function () {
+    $rows = [
+        'model-1' => TableRow::make(DataContainer::make(['Name' => TableCells::td('Alice')])),
+    ];
+
+    expect(fn () => TableBuilder::make(rows: $rows, headers: ['Name', 'Email'])->components())
+        ->toThrow(Exception::class, 'Row "model-1" has 1 cells but 2 headers were provided.');
 });

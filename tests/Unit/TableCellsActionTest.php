@@ -113,6 +113,26 @@ it('adds extra cells on cleanup', function () {
     expect($cell->toArray()['contents'])->toBe(['alice@example.com']);
 });
 
+it('includes extra cells in the ordered headers after cleanup', function () {
+    $action = new TableCellsAction(new FakeModel(['name' => 'Alice']));
+    $action->execute((new DefaultInput('name'))->setRecipe(new TableCellsRecipe(label: 'Name')));
+    $action->setExtraCell('Email', new TableCellsRecipe(value: fn () => 'alice@example.com'));
+
+    $action->cleanup();
+
+    expect($action->getHeaders())->toBe(['Name', 'Email']);
+});
+
+it('does not run cleanup when executing a single input', function () {
+    $action = (new TableCellsAction(new FakeModel(['name' => 'Alice'])))
+        ->setExtraCell('Email', new TableCellsRecipe(value: fn () => 'alice@example.com'));
+
+    $action->execute((new DefaultInput('name'))->setRecipe(new TableCellsRecipe(label: 'Name')));
+
+    expect($action->getHeaders())->toBe(['Name'])
+        ->and($action->getOutput()->contains(['Email']))->toBeFalse();
+});
+
 it('keeps a zero string recipe value', function () {
     $action = new TableCellsAction(new FakeModel(['name' => 'Alice']));
 

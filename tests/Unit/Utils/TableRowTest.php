@@ -46,3 +46,8 @@ it('uses the configured row type', function () {
 
     expect($row->toArray()['name'])->toBe('table.tr');
 });
+
+it('throws for unsupported cell values', function () {
+    expect(fn () => TableRow::make(output: ['Name' => ['unsupported']]))
+        ->toThrow(Exception::class, 'Unsupported table cell value of type array.');
+});
