@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Juaniquillo\CrudAssistant\DataContainer;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\FluxLikeComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableCells;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableComponentType;
 use Juaniquillo\TableComponentAction\Utils\TableBuilder;
@@ -167,4 +168,23 @@ it('reports the row key on a cell count mismatch', function () {
 
     expect(fn () => TableBuilder::make(rows: $rows, headers: ['Name', 'Email'])->components())
         ->toThrow(Exception::class, 'Row "model-1" has 1 cells but 2 headers were provided.');
+});
+
+it('builds a table with non-compound row components', function () {
+    $util = new TableComponentUtil(component: FluxLikeComponent::class);
+
+    $rows = [
+        TableRow::make(
+            output: DataContainer::make(['Name' => TableCells::td('Alice')]),
+            util: $util,
+        ),
+    ];
+
+    $builder = TableBuilder::make(rows: $rows, headers: ['Name'], util: $util);
+    $components = $builder->components();
+
+    expect($builder->getComponent())->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($components['head'])->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($components['body'])->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($components['table'])->toBeInstanceOf(FluxLikeComponent::class);
 });

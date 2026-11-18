@@ -7,6 +7,7 @@ use Juaniquillo\CrudAssistant\Inputs\DefaultInput;
 use Juaniquillo\TableComponentAction\TableCellsAction;
 use Juaniquillo\TableComponentAction\TableCellsRecipe;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\FakeModel;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\FluxLikeComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\Status;
 
 it('resolves its identifier from the action', function () {
@@ -168,4 +169,20 @@ it('throws when the action recipe is missing', function () {
 
     expect(fn () => $action->execute(new DefaultInput('name')))
         ->toThrow(Exception::class);
+});
+
+it('resolves cells from a non-compound content component', function () {
+    $action = new TableCellsAction(
+        model: new FakeModel,
+        component: FluxLikeComponent::class,
+    );
+
+    $component = $action->resolveCellComponent(
+        'Alice',
+        new TableCellsRecipe(themes: ['table' => 'td']),
+    );
+
+    expect($component)->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($component->getContents())->toBe(['Alice'])
+        ->and($component->getThemes())->toBe(['table' => 'td']);
 });

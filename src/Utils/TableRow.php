@@ -7,6 +7,8 @@ namespace Juaniquillo\TableComponentAction\Utils;
 use Exception;
 use Juaniquillo\BaseBackendComponent\Contracts\BackendComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ContentComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ThemeComponent;
 use Juaniquillo\CrudAssistant\Contracts\DataContainerInterface;
 
 /**
@@ -25,7 +27,7 @@ final class TableRow
         array $themes = [],
         ?TableComponentUtil $util = null,
         ?TableTypes $types = null,
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         $util ??= new TableComponentUtil;
         $types ??= new TableTypes;
 

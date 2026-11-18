@@ -10,3 +10,5 @@ All notable changes to `juaniquillo/table-component-action` are documented here.
 - Added `TableBuilder` and `TableTypes` for assembling complete tables.
 - Added a Laravel Boost skill.
 - Raised PHPStan analysis to level 10.
+- Allow non-compound components that implement the content and theme contracts
+  (for example Flux and Slate components).

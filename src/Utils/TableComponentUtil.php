@@ -11,6 +11,8 @@ use Juaniquillo\BackendComponents\MainBackendComponent;
 use Juaniquillo\BackendComponents\Themes\DefaultThemeManager;
 use Juaniquillo\BaseBackendComponent\Contracts\BackendComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ContentComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ThemeComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\ThemeManager;
 
 /**
@@ -38,7 +40,7 @@ final readonly class TableComponentUtil
         string|BackedEnum $type = ComponentEnum::TH,
         array $themes = [],
         array $attributes = [],
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         return $this->resolveComponent([$header], $type, $themes, $attributes);
     }
 
@@ -52,7 +54,7 @@ final readonly class TableComponentUtil
         string|BackedEnum $type = ComponentEnum::TR,
         array $themes = [],
         array $attributes = [],
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         return $this->resolveComponent($cells, $type, $themes, $attributes);
     }
 
@@ -67,7 +69,7 @@ final readonly class TableComponentUtil
         array $themes = [],
         array $attributes = [],
         string|BackedEnum $rowType = ComponentEnum::TR,
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         return $this->resolveComponent(
             contents: [$this->resolveComponent($headers, $rowType)],
             type: $type,
@@ -86,7 +88,7 @@ final readonly class TableComponentUtil
         string|BackedEnum $type = ComponentEnum::TBODY,
         array $themes = [],
         array $attributes = [],
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         return $this->resolveComponent($rows, $type, $themes, $attributes);
     }
 
@@ -100,7 +102,7 @@ final readonly class TableComponentUtil
         string|BackedEnum $type = ComponentEnum::TABLE,
         array $themes = [],
         array $attributes = [],
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         return $this->resolveComponent($contents, $type, $themes, $attributes);
     }
 
@@ -115,13 +117,17 @@ final readonly class TableComponentUtil
         array $themes = [],
         array $attributes = [],
         ?ThemeManager $themeManager = null,
-    ): CompoundComponent {
+    ): BackendComponent&ContentComponent&ThemeComponent {
         $class = $this->component;
 
         $component = new $class($type, $themeManager ?? $this->themeManager);
 
-        if (! $component instanceof CompoundComponent) {
-            throw new Exception('The component must implement '.CompoundComponent::class.'.');
+        if (! $component instanceof ContentComponent
+            || ! $component instanceof ThemeComponent) {
+            throw new Exception(
+                'The component must implement '.ContentComponent::class
+                .' and '.ThemeComponent::class.'.',
+            );
         }
 
         $component->setAttributes($attributes);
