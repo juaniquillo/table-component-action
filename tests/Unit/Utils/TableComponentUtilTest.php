@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Juaniquillo\BackendComponents\Enums\ComponentEnum;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\FluxLikeComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\IncompleteBackendComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableCells;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableComponentType;
@@ -107,4 +108,16 @@ it('uses the configured row type for the head row', function () {
     );
 
     expect($head->toArray()['contents'][0]['name'])->toBe('table.tr');
+});
+
+it('builds parts with a non-compound content component', function () {
+    $util = new TableComponentUtil(component: FluxLikeComponent::class);
+
+    $table = $util->table([
+        $util->head([$util->header('Name')]),
+        $util->body([$util->row([TableCells::td('Alice')])]),
+    ]);
+
+    expect($table)->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($table->getContents())->toHaveCount(2);
 });

@@ -7,6 +7,8 @@ namespace Juaniquillo\TableComponentAction\Utils;
 use Exception;
 use Juaniquillo\BaseBackendComponent\Contracts\BackendComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ContentComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ThemeComponent;
 
 /**
  * Assembles a complete table from prebuilt row components.
@@ -17,7 +19,7 @@ use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
 final class TableBuilder
 {
     /**
-     * @var array<int|string, CompoundComponent>
+     * @var array<int|string, BackendComponent&ContentComponent&ThemeComponent>
      */
     private readonly array $rows;
 
@@ -56,7 +58,7 @@ final class TableBuilder
     private array $bodyThemes = [];
 
     /**
-     * @param  iterable<int|string, CompoundComponent>  $rows
+     * @param  iterable<int|string, BackendComponent&ContentComponent&ThemeComponent>  $rows
      * @param  array<int, string|int|BackendComponent|CompoundComponent>|null  $headers
      */
     public function __construct(
@@ -72,7 +74,7 @@ final class TableBuilder
     }
 
     /**
-     * @param  iterable<int|string, CompoundComponent>  $rows
+     * @param  iterable<int|string, BackendComponent&ContentComponent&ThemeComponent>  $rows
      * @param  array<int, string|int|BackendComponent|CompoundComponent>|null  $headers
      */
     public static function make(
@@ -135,7 +137,11 @@ final class TableBuilder
     }
 
     /**
-     * @return array{head: CompoundComponent, body: CompoundComponent, table: CompoundComponent}|null
+     * @return array{
+     *   head: BackendComponent&ContentComponent&ThemeComponent,
+     *   body: BackendComponent&ContentComponent&ThemeComponent,
+     *   table: BackendComponent&ContentComponent&ThemeComponent
+     * }|null
      */
     public function components(): ?array
     {
@@ -174,7 +180,7 @@ final class TableBuilder
         ];
     }
 
-    public function getComponent(): ?CompoundComponent
+    public function getComponent(): (BackendComponent&ContentComponent&ThemeComponent)|null
     {
         $components = $this->components();
 

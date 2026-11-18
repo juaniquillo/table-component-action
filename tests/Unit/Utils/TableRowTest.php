@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Juaniquillo\BackendComponents\Enums\ComponentEnum;
 use Juaniquillo\CrudAssistant\DataContainer;
+use Juaniquillo\TableComponentAction\Tests\Fixtures\FluxLikeComponent;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableCells;
 use Juaniquillo\TableComponentAction\Tests\Fixtures\TableComponentType;
+use Juaniquillo\TableComponentAction\Utils\TableComponentUtil;
 use Juaniquillo\TableComponentAction\Utils\TableRow;
 use Juaniquillo\TableComponentAction\Utils\TableTypes;
 
@@ -50,4 +52,14 @@ it('uses the configured row type', function () {
 it('throws for unsupported cell values', function () {
     expect(fn () => TableRow::make(output: ['Name' => ['unsupported']]))
         ->toThrow(Exception::class, 'Unsupported table cell value of type array.');
+});
+
+it('creates a row with a non-compound content component', function () {
+    $row = TableRow::make(
+        output: ['Name' => TableCells::td('Alice')],
+        util: new TableComponentUtil(component: FluxLikeComponent::class),
+    );
+
+    expect($row)->toBeInstanceOf(FluxLikeComponent::class)
+        ->and($row->getContents())->toHaveCount(1);
 });

@@ -13,6 +13,8 @@ use Juaniquillo\BackendComponents\MainBackendComponent;
 use Juaniquillo\BackendComponents\Themes\DefaultThemeManager;
 use Juaniquillo\BaseBackendComponent\Contracts\BackendComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\CompoundComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ContentComponent;
+use Juaniquillo\BaseBackendComponent\Contracts\ThemeComponent;
 use Juaniquillo\BaseBackendComponent\Contracts\ThemeManager;
 use Juaniquillo\CrudAssistant\Action;
 use Juaniquillo\CrudAssistant\Contracts\ActionInterface;
@@ -145,8 +147,12 @@ class TableCellsAction extends Action implements ActionInterface
 
         $component = new $componentClass($componentType, $manager);
 
-        if (! $component instanceof CompoundComponent) {
-            throw new Exception('The component must implement '.CompoundComponent::class.'.');
+        if (! $component instanceof ContentComponent
+            || ! $component instanceof ThemeComponent) {
+            throw new Exception(
+                'The component must implement '.ContentComponent::class
+                .' and '.ThemeComponent::class.'.',
+            );
         }
 
         $component->setAttributes($attributes);
